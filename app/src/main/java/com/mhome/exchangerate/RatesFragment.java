@@ -145,8 +145,8 @@ public class RatesFragment extends Fragment {
             TextView price = holder.rates;
 //            ImageView image = holder.iv;
 
-            title.setText(rates.get(0));
-            price.setText(rates.get(5));
+            title.setText("100 "+rates.get(0));
+            price.setText("= "+rates.get(5)+" 人民币");
             //Glide.with(getContext()).load(images[rates.image]).into(image);
             /*holder.cv.setOnClickListener(new CardView.OnClickListener(){
                 @Override
