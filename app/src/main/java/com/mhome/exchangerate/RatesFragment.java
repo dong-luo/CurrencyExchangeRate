@@ -15,17 +15,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.google.gson.Gson;
-
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
 
 public class RatesFragment extends Fragment {
     View view;
@@ -60,9 +56,10 @@ public class RatesFragment extends Fragment {
                         updateData();
                         swipeRefreshLayout.setRefreshing(false);
                     }
-                },1);
+                },666);
             }
         });
+
         return view;
 
 
@@ -72,7 +69,7 @@ public class RatesFragment extends Fragment {
         String url = "http://op.juhe.cn/onebox/exchange/query";
         url += "?key=" + APP_KEY;
 
-        JsonObjectRequest jsObjRequest = new JsonObjectRequest
+        /*JsonObjectRequest jsObjRequest = new JsonObjectRequest
                 (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -109,7 +106,44 @@ public class RatesFragment extends Fragment {
                         tv_ginger.setText("ERROR");
                     }
                 });
-        queue.add(jsObjRequest);
+        queue.add(jsObjRequest);*/
+
+        RetrofitManager.apiService
+                .getRates(Constants.APP_KEY)
+                .enqueue(new Callback<RatesResponse>() {
+                    @Override
+                    public void onResponse(Call<RatesResponse> call, retrofit2.Response<RatesResponse> response) {
+                        int statusCode = response.code();
+                        RatesResponse ratesResponse = response.body();
+                        List<List<String>> mList = ratesResponse.result.list;
+                        mList.add(0,new ArrayList<String>() {{
+                            add("人民币");
+                            add("100");
+                            add("100");
+                            add("100");
+                            add("100");
+                            add("100");
+                        }});
+                        if(itemList == null){
+                            itemList = mList;
+                            adapter = new MyRecyclerViewAdapter(itemList);
+                            recyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
+                            recyclerView.setAdapter(adapter);
+                            recyclerView.setLayoutManager(new LinearLayoutManager(getActivity(),LinearLayoutManager.VERTICAL,false));
+                            tv_ginger.setVisibility(View.INVISIBLE);
+                        }else{
+                            itemList.clear();
+                            itemList.addAll(mList);
+                            adapter.notifyDataSetChanged();
+                            Log.i("ADA","updated");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<RatesResponse> call, Throwable t) {
+
+                    }
+                });
     }
 
     class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder>{
@@ -140,25 +174,12 @@ public class RatesFragment extends Fragment {
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
             final List<String> rates = responses.get(position);
-
-            TextView title = holder.title;
-            TextView price = holder.rates;
+                TextView title = holder.title;
+                TextView price = holder.rates;
 //            ImageView image = holder.iv;
 
             title.setText("100 "+rates.get(0));
             price.setText("= "+rates.get(5)+" 人民币");
-            //Glide.with(getContext()).load(images[rates.image]).into(image);
-            /*holder.cv.setOnClickListener(new CardView.OnClickListener(){
-                @Override
-                public void onClick(View view){
-                    Intent intent = new Intent(view.getContext(),ScrollingActivity.class);
-                    intent.putExtra(TAG,images[rates.image]);
-                    intent.putExtra("subtitle",rates.subtitle);
-                    view.getContext().startActivity(intent);
-                }
-            });*/
-
-
         }
 
         class ViewHolder extends RecyclerView.ViewHolder{
